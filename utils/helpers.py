@@ -1,3 +1,7 @@
+'''
+Contains generic helper functions.
+'''
+
 import subprocess
 
 import numpy as np
@@ -5,7 +9,7 @@ import torch
 
 def gpu_usage() -> list[int]:
   '''
-  Get the current GPU memory usage.
+  Get the current CUDA memory usage.
   '''
   # Get output from nvidia-smi
   try:
@@ -23,7 +27,7 @@ def gpu_usage() -> list[int]:
 
 def get_device(threshold: int | float = 500) -> str:
   '''
-  Returns a device with memory usage below `threshold`.
+  Returns a device with memory usage below `threshold` mbs.
   '''
   # Check if CUDA is available
   if torch.cuda.is_available():
