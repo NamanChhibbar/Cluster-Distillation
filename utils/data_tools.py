@@ -1,8 +1,8 @@
 import numpy as np
 import scipy.cluster.hierarchy as sch 
 
-from text_utils import TextPreprocessor,SegmenterEmbedder,BiMapping
-from helpers import get_device
+from .text_utils import TextPreprocessor,SegmenterEmbedder,BiMapping
+from .helpers import get_device
 
 def L2(x, y):
     """Calculates the L2 (Euclidean) distance between two numpy arrays."""
@@ -24,7 +24,6 @@ class ClusterModel:
                              Defaults to L2 (Euclidean distance).
             num_clusters (int): The desired number of clusters.
         """
-        self.num_clusters = num_clusters
         self.dist = dist
 
     def fit(self, embeddings: np.ndarray, num_clusters : int = 10) -> dict:
