@@ -121,6 +121,7 @@ class Shortener:
         """
         self.preprocessor = TextPreprocessor()
         self.segmenter_embedder = SegmenterEmbedder(device=get_device())
+        print(get_device())
         self.cluster_model = ClusterModel()
         self.filter_model = FilterModel()   
 
@@ -144,9 +145,9 @@ class Shortener:
 
         mapping = BiMapping(segments, embeddings)
 
-        clusters = cluster_model.fit(embeddings, num_clusters=num_clusters)
+        clusters = self.cluster_model.fit(embeddings, num_clusters=num_clusters)
 
-        embedding_indexes = filter_model.fit(clusters)
+        embedding_indexes = self.filter_model.fit(clusters)
 
         representative_embeddings = embeddings[embedding_indexes]
 
