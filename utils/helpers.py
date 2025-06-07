@@ -7,7 +7,7 @@ import subprocess
 import numpy as np
 import torch
 
-def gpu_usage() -> list[int]:
+def get_cuda_usage() -> list[int]:
   '''
   Get the current CUDA memory usage.
   '''
@@ -31,7 +31,7 @@ def get_device(threshold: int | float = 500) -> str:
   '''
   # Check if CUDA is available
   if torch.cuda.is_available():
-    usage = gpu_usage()
+    usage = get_cuda_usage()
     cuda_ind = np.argmin(usage)
     return f'cuda:{cuda_ind}' if usage[cuda_ind] < threshold else 'cpu'
   # Check if MPS is available
