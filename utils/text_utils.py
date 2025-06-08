@@ -2,6 +2,7 @@
 Contains text processing utilities for cleaning and normalizing text data.
 '''
 import re
+import unicodedata
 
 import numpy as np
 import torch
@@ -17,6 +18,13 @@ class TextPreprocessor:
     # Remove unecessary periods
     (r'\.\s*([,;:?!-])', r'\1'),
     (r'([,;:?!-])\s*\.', r'\1'),
+    # Replace unicode quotes with standard quotes
+    (r'[“”]', '"'),
+    (r'[‘’]', "'"),
+    # Replace unicode dashes with standard dash
+    (r'[–—−‐]', '-'),
+    # Replace unicode ellipsis with standard ellipsis
+    (r'…', '...'),
     # Fix spaces before and after punctuations
     (r'\s+([,.;:?!])', r'\1'),
     (r'(?<=,)([^\s\d])', r' \1'),
@@ -24,8 +32,6 @@ class TextPreprocessor:
     # Remove spaces within brackets and quotes
     (r"'([^']*)'", lambda m: f"'{m.group(1).strip()}'"),
     (r'"([^"]*)"', lambda m: f'"{m.group(1).strip()}"'),
-    (r'“([^”]*)”', lambda m: f'“{m.group(1).strip()}”'),
-    (r'‘([^’]*)’', lambda m: f'‘{m.group(1).strip()}’'),
     (r'\[([^\]]*)\]', lambda m: f'[{m.group(1).strip()}]'),
     (r'\(([^\)]*)\)', lambda m: f'({m.group(1).strip()})'),
     # Normalize non-newline spaces
@@ -82,12 +88,17 @@ class TextPreprocessor:
     # Process texts
     processed_texts = []
     for text in texts:
+      # Normalize unicode characters
+      text = unicodedata.normalize('NFKD', text)
+      text = ''.join(c for c in text if not unicodedata.combining(c))
+      # Apply all patterns and substitutions
       for pat, sub in self._pats_subs:
         text = pat.sub(sub, text)
+      # Strip leading and trailing spaces
       text = text.strip()
       processed_texts.append(text)
     return processed_texts[0] if single_text else processed_texts
-  
+
 
 class SegmenterEmbedder:
   '''
@@ -104,10 +115,10 @@ class SegmenterEmbedder:
     self.seg_model = SaT('sat-6l-sm')
     self.seg_model.half().to(device)
     self.embed_model = SentenceTransformer('all-mpnet-base-v2', device=device)
-  
+
   def __call__(self, text: str) -> tuple[list[str], np.ndarray]:
     # Segment the text
-    segments = self.seg_model.split(text)
+    segments: list[str] = self.seg_model.split(text)
     # Clean up segments
     segments = [seg.strip() for seg in segments if seg.strip()]
     # Embed the segments
@@ -134,7 +145,7 @@ class BiMapping:
       (tuple(emb.tolist()), text)
       for emb, text in zip(embeddings, texts)
     )
-  
+
   def __getitem__(self, key: str | np.ndarray) -> np.ndarray | str:
     '''
     Get embedding for text or vice-versa
