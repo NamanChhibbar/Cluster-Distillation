@@ -1,12 +1,14 @@
 import numpy as np
-import scipy.cluster.hierarchy as sch 
+import scipy.cluster.hierarchy as sch
+import torch
 
-from .text_utils import TextPreprocessor,SegmenterEmbedder,BiMapping
-from .helpers import get_device
+from .text_utils import TextPreprocessor, SegmenterEmbedder, BiMapping
+
 
 def L2(x, y):
     """Calculates the L2 (Euclidean) distance between two numpy arrays."""
     return np.linalg.norm(x - y)
+
 
 class ClusterModel:
     """
@@ -90,13 +92,13 @@ class FilterModel:
                   chosen as representatives for each cluster.
         """
         reps = []
-        for cluster_id, embeddings_dict in clusters.items():
+        for _, embeddings_dict in clusters.items():
             current_representative_index = -1
             min_total_spread = float('inf')
 
             for index, candidate_embedding in embeddings_dict.items():
                 total_spread = 0
-                for neighbour_index, neighbour_embedding in embeddings_dict.items():
+                for _, neighbour_embedding in embeddings_dict.items():
                     total_spread += self.dist(candidate_embedding, neighbour_embedding)
 
                 if total_spread < min_total_spread:
@@ -115,41 +117,31 @@ class Shortener:
     A class to preprocess text, segment it, embed segments, cluster them,
     and then select representative segments to shorten the original text.
     """
-    def __init__(self):
+    def __init__(self, device: str | torch.device = 'cpu'):
         """
         Initializes the Shortener with a TextPreprocessor and SegmenterEmbedder.
         """
         self.preprocessor = TextPreprocessor()
-        self.segmenter_embedder = SegmenterEmbedder(device=get_device())
-        print(get_device())
+        self.segmenter_embedder = SegmenterEmbedder(device=device)
         self.cluster_model = ClusterModel()
         self.filter_model = FilterModel()   
 
-    def fit(self, text: str, num_clusters: int = 100) -> list:
+    def fit(self, text: str, num_clusters: int) -> list[str]:
         """
         Shortens the input text by identifying and returning representative segments.
 
         Args:
             text (str): The input text to be shortened.
-            num_clusters (int): The target number of clusters to form,
-                                               which directly influences the number of
-                                               representative segments.
+            num_clusters (int): The target number of clusters to form, which directly influences the number of representative segments.
 
         Returns:
-            list: A list of strings, where each string is a representative segment
-                  from the original text.
+            list: A list of strings, where each string is a representative segment from the original text.
         """
         preprocessed_text = self.preprocessor(text)
-
         segments, embeddings = self.segmenter_embedder(preprocessed_text)
-
         mapping = BiMapping(segments, embeddings)
-
         clusters = self.cluster_model.fit(embeddings, num_clusters=num_clusters)
-
         embedding_indexes = self.filter_model.fit(clusters)
-
         representative_embeddings = embeddings[embedding_indexes]
-
         representative_segments = [mapping[emb] for emb in representative_embeddings]
         return representative_segments
