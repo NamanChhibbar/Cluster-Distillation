@@ -39,13 +39,13 @@ class TextPreprocessor:
     # Remove spaces around newline
     (r' *\n *', '\n'),
     # Remove lone newlines
-    (r'(?<!\n)\n(?!\n)', ''),
+    (r'(?<!\n)\n(?!\n)', ' '),
     # Replace multiple newlines
     (r'\n{3,}', '\n\n')
   ]
 
   # Matches everything except words, numbers, and single quotes
-  _non_alphanumeric_subs = (r"[^\w\s'\"]", '')
+  _non_alphanumeric_subs = (r'[^\u0000-\u007f]', '')
 
   # Matches numbers with optional leading '+' or '-' sign
   _number_sub = (r'(\b|\+)[\d-]+\b', '')
