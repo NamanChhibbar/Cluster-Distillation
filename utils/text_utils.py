@@ -105,7 +105,7 @@ class SegmenterEmbedder:
   A class to segment and embed text using SaT for segmentation and SentenceTransformer for embeddings.
   '''
 
-  def __init__(self, device: str | torch.device) -> None:
+  def __init__(self, device: str | torch.device = 'cpu') -> None:
     '''
     Initializes the SegmentEmbed class with a segmentation model and an embedding model.
     Args:
