@@ -3,8 +3,6 @@ Contains generic helper functions.
 '''
 
 import subprocess
-
-import numpy as np
 import torch
 
 def get_cuda_usage() -> list[int]:
@@ -25,14 +23,14 @@ def get_cuda_usage() -> list[int]:
   gpu_memory = [int(mem) for mem in result.split('\n')]
   return gpu_memory
 
-def get_device(threshold: int | float = 500) -> str:
+def get_device(threshold: float = 500.) -> str:
   '''
   Returns a device with memory usage below `threshold` mbs.
   '''
   # Check if CUDA is available
   if torch.cuda.is_available():
     usage = get_cuda_usage()
-    cuda_ind = np.argmin(usage)
+    cuda_ind = min(range(len(usage)), key=lambda i: usage[i])
     return f'cuda:{cuda_ind}' if usage[cuda_ind] < threshold else 'cpu'
   # Check if MPS is available
   if torch.backends.mps.is_available():
